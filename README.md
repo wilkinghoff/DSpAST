@@ -68,12 +68,12 @@ If you use any part of this code for your work, we kindly ask you to cite the fo
 and the original [BAT](https://zhishengzheng.com/bat/) paper, which is the foundation of this work:
 ```
 @inproceedings{zheng2024bat,
-  author       = {Zhisheng Zheng and
-                  Puyuan Peng and
-                  Ziyang Ma and
-                  Xie Chen and
-                  Eunsol Choi and
-                  David Harwath},
+  author       = {Zheng, Zhisheng and
+                  Peng, Puyuan and
+                  Ma, Ziyang and
+                  Chen, Xie and
+                  Choi, Eunsol and
+                  Harwath, David},
   title        = {{BAT:} Learning to Reason about Spatial Sounds with Large Language Models},
   booktitle    = {Proc. ICML},
   year         = {2024}
