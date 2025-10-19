@@ -29,11 +29,11 @@ DSpAST is trained and evaluated using a binaural dataset based on [Audioset](htt
 
 DSpAST is trained in three stages. For each stage, we provide a training script and trained checkpoint:
 
-| Stage | Audioset split | Epochs | Loss Weights | Training Script | Checkpoint |
+| Stage | Audioset split | Epochs | Loss Weights (SED, DP, DOAE) | Training Script | Checkpoint |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | unbalanced (10% per epoch) | 100 | (1,0,0) | `scripts/finetune-stage1.sh` | |
-| 2 | unbalanced (1% per epoch) | 50 | (100,2,1) | `scripts/finetune-stage2.sh` | |
-| 3 | balanced (100% per epoch) | 50 | (100,2,1) | `scripts/finetune-stage3.sh` | |
+| 1 | unbalanced (10% per epoch) | 100 | (1, 0, 0) | `scripts/finetune-stage1.sh` | |
+| 2 | unbalanced (1% per epoch) | 50 | (100, 2, 1) | `scripts/finetune-stage2.sh` | |
+| 3 | balanced (100% per epoch) | 50 | (100, 2, 1) | `scripts/finetune-stage3.sh` | |
 
 ***
 
