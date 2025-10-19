@@ -1,6 +1,6 @@
 #!/bin/bash
 
-code_dir=Spatial-AST-main
+code_dir=DSpAST
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export TORCH_DISTRIBUTED_DEBUG="DETAIL"
@@ -16,17 +16,17 @@ ckpt=./outputs/finetune-stage1/checkpoint-99.pth
 
 # Sound source
 dataset=audioset
-audio_path_root=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/AudioSet # https://huggingface.co/datasets/zhisheng01/SpatialAudio/tree/main/SpatialSoundQA/AudioSet
-audioset_label=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/AudioSet/metadata/class_labels_indices_subset.csv # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/class_labels_indices_subset.csv
-audioset_train_json=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/AudioSet/metadata/unbalanced.json # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/unbalanced.json
-audioset_train_weight=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/AudioSet/metadata/weights/unbalanced_weight.csv # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/weights/unbalanced_weight.csv
-audioset_eval_json=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/AudioSet/metadata/eval.json # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/eval.json
+audio_path_root=/path_to_data/SpatialSoundQA/AudioSet # https://huggingface.co/datasets/zhisheng01/SpatialAudio/tree/main/SpatialSoundQA/AudioSet
+audioset_label=/path_to_data/SpatialSoundQA/AudioSet/metadata/class_labels_indices_subset.csv # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/class_labels_indices_subset.csv
+audioset_train_json=/path_to_data/SpatialSoundQA/AudioSet/metadata/unbalanced.json # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/unbalanced.json
+audioset_train_weight=/path_to_data/SpatialSoundQA/AudioSet/metadata/weights/unbalanced_weight.csv # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/weights/unbalanced_weight.csv
+audioset_eval_json=/path_to_data/SpatialSoundQA/AudioSet/metadata/eval.json # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/AudioSet/metadata/eval.json
 
 # For reverberation data, please visit https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/mp3d_reverb.zip
 reverb_type=binaural # or mono
-reverb_path_root=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/mp3d_reverb # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/mp3d_reverb.zip
-reverb_train_json=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/mp3d_reverb/train_reverberation.json
-reverb_val_json=/home/es.aau.dk/tp78yk/data/SpatialSoundQA/mp3d_reverb/eval_reverberation.json
+reverb_path_root=/path_to_data/SpatialSoundQA/mp3d_reverb # https://huggingface.co/datasets/zhisheng01/SpatialAudio/blob/main/SpatialSoundQA/mp3d_reverb.zip
+reverb_train_json=/path_to_data/SpatialSoundQA/mp3d_reverb/train_reverberation.json
+reverb_val_json=/path_to_data/SpatialSoundQA/mp3d_reverb/eval_reverberation.json
 
 # logging path
 output_dir=./outputs/finetune-stage2
