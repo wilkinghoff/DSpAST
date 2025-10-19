@@ -28,7 +28,7 @@ log_dir=./outputs/eval/log
 
 
 python -m torch.distributed.launch \
-    --nproc_per_node=1 --use_env $code_dir/main_finetune.py \
+    --nproc_per_node=1 --use_env $code_dir/main_finetune_dspast.py \
     --log_dir ${log_dir} --output_dir ${output_dir} \
     --model build_AST --dataset $dataset --finetune $ckpt \
     --audio_path_root $audio_path_root \
