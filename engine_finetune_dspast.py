@@ -1,0 +1,229 @@
+# Copyright (c) Kevin Wilkinghoff, Aalborg University.
+# All rights reserved.
+
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+# --------------------------------------------------------
+# References:
+# Spatial-AST: https://github.com/zszheng147/Spatial-AST
+# Audio-MAE: https://github.com/facebookresearch/AudioMAE
+# --------------------------------------------------------
+
+import math
+import sys
+from typing import Iterable, Optional
+import numpy as np
+import torch
+import torch.nn.functional as F
+
+from timm.data import Mixup
+from timm.utils import accuracy
+
+from utils.aml_losses import categorical_cross_entropy, compute_softmax_probs_for_subclusters
+
+import utils.misc as misc
+import utils.lr_sched as lr_sched
+from utils.stat import calculate_stats, concat_all_gather
+
+
+def train_one_epoch(
+        model: torch.nn.Module, criterion: torch.nn.Module,
+        data_loader: Iterable, optimizer: torch.optim.Optimizer,
+        device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
+        mixup_fn: Optional[Mixup] = None, log_writer=None, args=None
+    ):
+    model.train(True)
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    header = 'Epoch: [{}]'.format(epoch)
+    print_freq = 500
+
+    accum_iter = args.accum_iter
+
+    optimizer.zero_grad()
+
+    if log_writer is not None:
+        print('log_dir: {}'.format(log_writer.log_dir))
+    for data_iter_step, (batch) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+
+        # we use a per iteration (instead of per epoch) lr scheduler
+        if data_iter_step % accum_iter == 0:
+            lr_sched.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, args)
+
+        waveforms, reverbs = batch[0], batch[1]
+        targets, spatial_targets = batch[2], batch[3]
+
+        targets = targets.to(device, non_blocking=True)
+        distance = spatial_targets['distance'].long().to(device, non_blocking=True)
+        azimuth = spatial_targets['azimuth'].long().to(device, non_blocking=True)
+        elevation = spatial_targets['elevation'].long().to(device, non_blocking=True)
+
+        # with torch.cuda.amp.autocast():
+        outputs = model(waveforms, reverbs, mask_t_prob=args.mask_t_prob, mask_f_prob=args.mask_f_prob)
+
+        loss1 = criterion(outputs[0], targets)
+
+        distance = F.one_hot(distance, num_classes=21).float()
+        azimuth = F.one_hot(azimuth, num_classes=360).float()
+        elevation = F.one_hot(elevation, num_classes=180).float()
+
+        logits1 = outputs[1]
+        logits2 = outputs[2]
+        logits3 = outputs[3]
+        with torch.no_grad():
+            model.module.get_submodule("distance_head").update_scale_parameter(logits1, distance)
+            model.module.get_submodule("azimuth_head").update_scale_parameter(logits2, azimuth)
+            model.module.get_submodule("elevation_head").update_scale_parameter(logits3, elevation)
+
+        loss2 = categorical_cross_entropy(logits1 * model.module.get_submodule("distance_head").s, distance)
+        loss3 = categorical_cross_entropy(logits2 * model.module.get_submodule("azimuth_head").s, azimuth)
+        loss4 = categorical_cross_entropy(logits3 * model.module.get_submodule("elevation_head").s, elevation)
+
+        loss = args.sed_weight * loss1 + args.dp_weight * loss2 + args.doae_weight * (loss3 + loss4)
+            
+        loss_value = loss.item()
+
+        if not math.isfinite(loss_value):
+            print("Loss is {}, stopping training".format(loss_value))
+            sys.exit(1)
+
+        loss /= accum_iter
+        loss_scaler(loss, optimizer, clip_grad=max_norm,
+                    parameters=model.parameters(), create_graph=False,
+                    update_grad=(data_iter_step + 1) % accum_iter == 0)
+        if (data_iter_step + 1) % accum_iter == 0:
+            optimizer.zero_grad()
+
+        torch.cuda.synchronize()
+
+        metric_logger.update(loss=loss_value)
+        min_lr = 10.
+        max_lr = 0.
+        for group in optimizer.param_groups:
+            min_lr = min(min_lr, group["lr"])
+            max_lr = max(max_lr, group["lr"])
+
+        metric_logger.update(lr=max_lr)
+
+        loss_value_reduce = misc.all_reduce_mean(loss_value)
+        if log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
+            """ We use epoch_1000x as the x-axis in tensorboard.
+            This calibrates different curves when batch size changes.
+            """
+            epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
+            log_writer.add_scalar('loss', loss_value_reduce, epoch_1000x)
+            log_writer.add_scalar('lr', max_lr, epoch_1000x)
+
+    # gather the stats from all processes
+    metric_logger.synchronize_between_processes()
+    print("Averaged stats:", metric_logger)
+    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+
+@torch.no_grad()
+def evaluate(data_loader, model, device, dist_eval=False):
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    header = 'Test:'
+
+    # switch to evaluation mode
+    model.eval()
+    outputs = []
+    targets = []
+    vids = []
+
+    all_distance_preds = []
+    all_distances = []
+    doa_dists = []
+    for batch in metric_logger.log_every(data_loader, 300, header):
+
+        waveforms, reverbs = batch[0], batch[1]
+        target, spatial_targets = batch[2], batch[3]
+
+        target = target.to(device, non_blocking=True)
+        # compute output
+
+        output = model(waveforms, reverbs)
+        # remark: 
+        # 1. use concat_all_gather and --dist_eval for faster eval by distributed load over gpus
+        # 2. otherwise comment concat_all_gather and remove --dist_eval one every gpu
+
+        #"""
+        if dist_eval:
+            cls_output = concat_all_gather(output[0].detach())
+            target = concat_all_gather(target)
+        outputs.append(cls_output)
+        targets.append(target)
+        all_distances.append(spatial_targets['distance'].numpy())
+
+        all_distance_preds.append(torch.argmax(output[1], dim=1).detach().cpu().numpy())
+        
+        az_pred = torch.argmax(output[2], dim=1).detach().cpu().numpy()
+        ele_pred = torch.argmax(output[3], dim=1).detach().cpu().numpy()
+
+        az_gt = spatial_targets['azimuth'].long().numpy()
+        ele_gt = spatial_targets['elevation'].long().numpy()
+        doa_dist = distance_between_spherical_coordinates_rad(az_gt, ele_gt, az_pred, ele_pred)
+
+        doa_dists.append(doa_dist)
+
+    outputs = torch.cat(outputs).cpu().numpy()
+    targets = torch.cat(targets).cpu().numpy()
+    vids = [j for sub in vids for j in sub]
+    stats = calculate_stats(outputs, targets)
+
+    mAP = np.mean([stat['AP'] for stat in stats])
+    print("mAP: {:.6f}".format(mAP))
+
+    all_distance_preds = np.concatenate(all_distance_preds)
+    all_distances = np.concatenate(all_distances)
+    doa_dists = np.concatenate(doa_dists)
+
+    total_samples = len(all_distances)
+    spatial_outputs = []
+
+    distance_correct = np.sum([1 for truth, pred in zip(all_distances, all_distance_preds) if abs(truth - pred) <= 1])
+    spatial_outputs.append(distance_correct)
+
+    threshold = 20
+    doa_angular_error = np.sum(doa_dists)
+    doa_error = np.sum(doa_dists > threshold) # 
+    spatial_outputs.append(doa_error)
+    spatial_outputs.append(doa_angular_error)
+
+    if dist_eval:        
+        spatial_outputs = torch.tensor(spatial_outputs).to(device)
+        torch.distributed.all_reduce(spatial_outputs, op=torch.distributed.ReduceOp.SUM)
+        
+        total_samples = torch.tensor(total_samples).to(device)
+        torch.distributed.all_reduce(total_samples, op=torch.distributed.ReduceOp.SUM)
+        
+        spatial_outputs = spatial_outputs.cpu().numpy()
+        total_samples = total_samples.cpu().numpy()
+
+    return {
+        "mAP": mAP,
+        "distance_accuracy": spatial_outputs[0] / total_samples,
+        "doa_error": spatial_outputs[1] / total_samples,
+        "doa_angular_error": spatial_outputs[2] / total_samples,
+    }
+
+
+def distance_between_spherical_coordinates_rad(az1, ele1, az2, ele2):
+    """
+    Angular distance between two spherical coordinates
+    MORE: https://en.wikipedia.org/wiki/Great-circle_distance
+
+    :return: angular distance in degrees
+    """
+    #NOTE: [0, 180] --> [0, +180]; [+180, +360] --> [-180, 0]
+    az1[az1 > 180] -= 360
+    az2[az2 > 180] -= 360
+    az1 = az1 * np.pi / 180.
+    az2 = az2 * np.pi / 180.
+    ele1 = (ele1 - 90) * np.pi / 180.
+    ele2 = (ele2 - 90) * np.pi / 180.
+
+    dist = np.sin(ele1) * np.sin(ele2) + np.cos(ele1) * np.cos(ele2) * np.cos(np.abs(az1 - az2))
+    # Making sure the dist values are in -1 to 1 range, else np.arccos kills the job
+    dist = np.clip(dist, -1, 1)
+    dist = np.arccos(dist) * 180 / np.pi
+    return dist
