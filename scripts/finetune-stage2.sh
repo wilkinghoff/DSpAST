@@ -10,7 +10,7 @@ mask_t_prob=0.25
 mask_f_prob=0.25
 
 # Download from ...
-ckpt=/path_to_models/dspast-stage2.pth
+ckpt=/path_to_models/DSpAST-stage1.pth
 # or use your own checkpoint:
 ckpt=./outputs/finetune-stage1/checkpoint-99.pth
 
