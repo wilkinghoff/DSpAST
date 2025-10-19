@@ -1,5 +1,9 @@
 # DSpAST: Disentangled Spatial Audio Spectrogram Transformer
 
+<p align="center">
+  <img align="middle" height="450" src="dspast_illustration.pdf"/>
+</p>
+
 This repository contains the code and model checkpoints of [DSpAST: Disentangled Representations for Spatial Audio Reasoning with Large Language Models](https://arxiv.org/abs/2509.13927) and is a fork of the [SpatialAST Repository](https://github.com/zszheng147/Spatial-AST/tree/main).
 
 ***
