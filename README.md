@@ -21,7 +21,7 @@ bash timm_patch/patch.sh
 
 ## Dataset
 
-DSpAST is trained and evaluated using a binaural dataset based on [Audioset](https://research.google.com/audioset/) and [SoundSpaces 2.0](https://soundspaces.org) that was used to train the binaural encoder SpatialAST of [BAT](https://zhishengzheng.com/bat/). More details how to download the dataset can be found in the [SpatialAST Repository](https://github.com/zszheng147/Spatial-AST/tree/main).
+DSpAST is trained and evaluated using the same binaural dataset based on [Audioset](https://research.google.com/audioset/) and [SoundSpaces 2.0](https://soundspaces.org) that was used to train the binaural encoder SpatialAST of [BAT](https://zhishengzheng.com/bat/). More details including instructions on how to download the dataset can be found in the [SpatialAST Repository](https://github.com/zszheng147/Spatial-AST/tree/main).
 
 ***
 
