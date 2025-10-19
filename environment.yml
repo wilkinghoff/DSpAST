@@ -1,4 +1,4 @@
-name: spatial-ast
+name: dspast
 channels:
   - pytorch
   - nvidia
