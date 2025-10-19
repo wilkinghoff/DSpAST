@@ -27,7 +27,7 @@ DSpAST is trained and evaluated using a binaural dataset based on [Audioset](htt
 
 ## Training
 
-DSpAST is trained in three stages. For each stage, we provide a training script and trained checkpoint:
+DSpAST is trained in three stages. For each stage, we provide a training script and a trained checkpoint:
 
 | Stage | Audioset split | Epochs | Loss Weights (SED,DP,DOAE) | Training Script | Checkpoint |
 | :---: | :---: | :---: | :---: | :---: | :---: |
