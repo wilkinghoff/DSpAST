@@ -43,7 +43,7 @@ For inference, the script `scripts/inf.sh` can be used. On our system, the perfo
 
 | Binaural Encoder | mAP (↑) | ER20° (↓) | MAE (↓) | DER (↓) |
 | :---: | :---: | :---: | :---: | :---: |
-| SpatialAST (stage 2) | 49.90 | 24.43 | 17.87 | 32.50 |
+| [SpatialAST](https://github.com/zszheng147/Spatial-AST/tree/main) | 49.90 | 24.43 | 17.87 | 32.50 |
 | DSpAST (stage 1) | 53.05 | 98.56 | 95.57 | 97.58 |
 | DSpAST (stage 2) | 52.64 | 20.31 | **14.44** | 28.35 |
 | DSpAST (stage 3) | **54.53** | **20.28** | **14.44** | **28.03** |
