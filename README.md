@@ -48,7 +48,7 @@ For inference, the script `scripts/inf.sh` can be used. On our system, the perfo
 | DSpAST (stage 2) | 52.64 | 20.31 | **14.44** | 28.35 |
 | DSpAST (stage 3) | **54.53** | **20.28** | **14.44** | **28.03** |
 
-Similar performance improvements can also be observed when using DSpAST as a binaural encoder for spatial audio reasoning with LLMs. Please take a look at our [paper](https://arxiv.org/abs/2509.13927).
+Similar performance improvements can also be observed when using DSpAST as a binaural encoder for spatial audio reasoning with LLMs. Please have a look at our [paper](https://arxiv.org/abs/2509.13927) for further information.
 
 ***
 
