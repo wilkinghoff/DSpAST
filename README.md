@@ -57,11 +57,11 @@ Similar performance improvements can also be observed when using DSpAST as a bin
 If you use any part of this code for your work, we kindly ask you to cite the following papers:
 
 ```
-@unpublished{wilkinghoff2025dspast,
+@article{wilkinghoff2025dspast,
     author     = {Wilkinghoff, Kevin and
                   Tan, Zheng-Hua},
     title      = {{DSpAST:} Disentangled Representations for Spatial Audio Reasoning with Large Language Models},
-    note       = {arXiv:2509.13927},
+    journal    = {arXiv:2509.13927},
     year       = {2025}
 }
 ```
