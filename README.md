@@ -31,9 +31,9 @@ DSpAST is trained in three stages. For each stage, we provide a training script 
 
 | Stage | Audioset split | Epochs | Loss Weights (SED,DP,DOAE) | Training Script | Checkpoint |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | unbalanced (10% per epoch) | 100 | (1,0,0) | `scripts/finetune-stage1.sh` | [DSpAST-stage1.pth](https://huggingface.co/kwilk90/DSpAST/blob/main/DSpAST-stage1) |
-| 2 | unbalanced (1% per epoch) | 50 | (100,2,1) | `scripts/finetune-stage2.sh` | [DSpAST-stage2.pth](https://huggingface.co/kwilk90/DSpAST/blob/main/DSpAST-stage2) |
-| 3 | balanced (100% per epoch) | 50 | (100,2,1) | `scripts/finetune-stage3.sh` | [DSpAST-stage3.pth](https://huggingface.co/kwilk90/DSpAST/blob/main/DSpAST-stage3) |
+| 1 | unbalanced <br/> (10% per epoch) | 100 | (1,0,0) | `scripts/finetune-stage1.sh` | [DSpAST-stage1.pth](https://huggingface.co/kwilk90/DSpAST/blob/main/DSpAST-stage1) |
+| 2 | unbalanced <br/> (1% per epoch) | 50 | (100,2,1) | `scripts/finetune-stage2.sh` | [DSpAST-stage2.pth](https://huggingface.co/kwilk90/DSpAST/blob/main/DSpAST-stage2) |
+| 3 | balanced <br/> (100% per epoch) | 50 | (100,2,1) | `scripts/finetune-stage3.sh` | [DSpAST-stage3.pth](https://huggingface.co/kwilk90/DSpAST/blob/main/DSpAST-stage3) |
 
 ***
 
